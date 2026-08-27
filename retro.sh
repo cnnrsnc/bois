@@ -32,7 +32,7 @@ hostname $HostName
 
 mount -o rw,remount /boot
 
-endlines="sharedevice=NETWORK\nsharenetwork_cmd1=if [ ! -d /dev/net ]; then mkdir -p /dev/net; mknod /dev/net/tun c 10 200; chmod 600 /dev/net/tun; fi \&\& /userdata/tailscale/tailscaled -state /userdata/tailscale/state > /userdata/tailscale/tailscaled.log 2>\&1 \& sleep 2s; /userdata/tailscale/tailscale up --accept-routes\nsharenetwork_nfs1=ROMS@truenas-scale:/mnt/pool/retro/roms\nsharenetwork_nfs2=CHEATS@truenas-scale:/mnt/pool/retro/cheats"
+endlines="sharedevice=NETWORK\nsharenetwork_cmd1=if [ ! -d /dev/net ]; then mkdir -p /dev/net; mknod /dev/net/tun c 10 200; chmod 600 /dev/net/tun; fi \&\& /userdata/tailscale/tailscaled -state /userdata/tailscale/state > /userdata/tailscale/tailscaled.log 2>\&1 \& sleep 2s; /userdata/tailscale/tailscale up --accept-routes --accept-dns\nsharenetwork_nfs1=ROMS@truenas-scale:/mnt/pool/retro/roms\nsharenetwork_nfs2=CHEATS@truenas-scale:/mnt/pool/retro/cheats"
 
 sed -i -z -e "s|sharedevice=INTERNAL|$endlines|" /boot/batocera-boot.conf
 
