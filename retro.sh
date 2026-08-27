@@ -10,6 +10,8 @@ HostName="${HN:-retro}"
 
 sed -i "s|hostname=BATOCERA|hostname=${HostName}|" /userdata/system/batocera.conf
 
+hostname $HostName
+
 wget https://pkgs.tailscale.com/stable/tailscale_1.102.3_$arch.tgz
 
 package=$(ls ./*tgz)
