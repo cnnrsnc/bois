@@ -2,15 +2,13 @@
 
 cd $HOME
 
+if [ ! -d /userdata/tailscale ]; then
+
 arch=$(uname -m)
 
 [[ "$arch" == "x86_64" ]] && arch="amd64" || arch="arm64"
 
 HostName="${HN:-retro}"
-
-sed -i "s|hostname=BATOCERA|hostname=${HostName}|" /userdata/system/batocera.conf
-
-hostname $HostName
 
 wget https://pkgs.tailscale.com/stable/tailscale_1.102.3_$arch.tgz
 
@@ -24,7 +22,13 @@ mv $ts /userdata/tailscale
 
 /userdata/tailscale/tailscaled -state /userdata/tailscale/state > /userdata/tailscale/tailscaled.log 2>&1 &
 
-/userdata/tailscale/tailscale up --auth-key "$AUTHKEY"
+/userdata/tailscale/tailscale up --auth-key "$AUTHKEY" --accept-routes
+
+fi
+
+sed -i "s|hostname=BATOCERA|hostname=${HostName}|" /userdata/system/batocera.conf
+
+hostname $HostName
 
 mount -o rw,remount /boot
 
