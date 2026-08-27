@@ -20,7 +20,7 @@ mv $ts /userdata/tailscale
 
 /userdata/tailscale/tailscaled -state /userdata/tailscale/state > /userdata/tailscale/tailscaled.log 2>&1 &
 
-/userdata/tailscale/tailscale up --auth-key "tskey-auth-kg9MW1TGRq11CNTRL-rHwcB9aCmf22AcD7thvgf2nHTDF7mqhw"
+/userdata/tailscale/tailscale up --auth-key "$AUTHKEY"
 
 mount -o rw,remount /boot
 
