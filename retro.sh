@@ -28,7 +28,7 @@ mv $ts /userdata/tailscale
 
 mount -o rw,remount /boot
 
-sed -i 's|INTERNAL|NETWORK|' /boot/batocera-boot.conf
+sed -i 's|sharedevice=INTERNAL|sharedevice=NETWORK|' /boot/batocera-boot.conf
 
 endlines="
 sharenetwork_cmd1=eval if [ ! -d /dev/net ]; then mkdir -p /dev/net; mknod /dev/net/tun c 10 200; chmod 600 /dev/net/tun; fi && /userdata/tailscale/tailscaled -state /userdata/tailscale/state > /userdata/tailscale/tailscaled.log 2>&1 & sleep 2s; /userdata/tailscale/tailscale up --accept-routes
