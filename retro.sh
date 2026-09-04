@@ -4,25 +4,25 @@ cd $HOME
 
 if [ ! -d /userdata/tailscale ]; then
 
-arch=$(uname -m)
+    arch=$(uname -m)
 
-[[ "$arch" == "x86_64" ]] && arch="amd64" || arch="arm64"
+    [[ "$arch" == "x86_64" ]] && arch="amd64" || arch="arm64"
 
-HostName="${HN:-retro}"
+    HostName="${HN:-retro}"
 
-wget https://pkgs.tailscale.com/stable/tailscale_1.102.3_$arch.tgz
+    wget https://pkgs.tailscale.com/stable/tailscale_1.102.3_$arch.tgz
 
-package=$(ls ./*tgz)
+    package=$(ls ./*tgz)
 
-tar -xzf $package
+    tar -xzf $package
 
-ts=${package%.tgz}
+    ts=${package%.tgz}
 
-mv $ts /userdata/tailscale
+    mv $ts /userdata/tailscale
 
-/userdata/tailscale/tailscaled -state /userdata/tailscale/state > /userdata/tailscale/tailscaled.log 2>&1 &
+    /userdata/tailscale/tailscaled -state /userdata/tailscale/state > /userdata/tailscale/tailscaled.log 2>&1 &
 
-/userdata/tailscale/tailscale up --auth-key "$AUTHKEY" --accept-routes
+    /userdata/tailscale/tailscale up --auth-key "$AUTHKEY" --accept-routes
 
 fi
 
@@ -30,10 +30,40 @@ sed -i "s|hostname=BATOCERA|hostname=${HostName}|" /userdata/system/batocera.con
 
 hostname $HostName
 
-mount -o rw,remount /boot
+mkdir /nas
 
-endlines="sharedevice=NETWORK\nsharenetwork_cmd1=if [ ! -d /dev/net ]; then mkdir -p /dev/net; mknod /dev/net/tun c 10 200; chmod 600 /dev/net/tun; fi \&\& /userdata/tailscale/tailscaled -state /userdata/tailscale/state > /userdata/tailscale/tailscaled.log 2>\&1 \& sleep 2s; /userdata/tailscale/tailscale up --accept-routes --accept-dns\nsharenetwork_nfs1=ROMS@truenas-scale:/mnt/pool/retro/roms\nsharenetwork_nfs2=CHEATS@truenas-scale:/mnt/pool/retro/cheats"
+mkdir ./services
 
-sed -i -z -e "s|sharedevice=INTERNAL|$endlines|" /boot/batocera-boot.conf
+cat << EOF > /userdata/system/services/nas_mount                                                                                                         
+log=$HOME/serlog
 
+
+case $1 in
+  "start")
+    [ -d /userdata/system/nas ] || mkdir /userdata/system/nas
+
+    /userdata/tailscale/tailscaled -state /userdata/tailscale/state > /userdata/tailscale/tailscaled.log 2>&1 &
+    echo "Tailscale daemon exit code and PID: ${?} $(pgrep tailscaled)" >> $log
+
+    /userdata/tailscale/tailscale up --accept-routes --accept-dns
+    echo "Tailscale up exit code: ${?}" >> $log
+
+    tsip=$(/userdata/tailscale/tailscale ip | head -n 1)
+
+    ip addr | grep $tsip || ip addr add ${tsip}/32 dev tailscale0
+
+    mount -t nfs -o hard,retrans=3,timeo=100 truenas-scale:/mnt/pool/retro /nas
+    mount | grep nas >> $log
+  ;;
+  "stop")
+    rm $log
+    umount  /nas
+    /userdata/tailscale/tailscale down
+    pkill tailscaled
+  ;;
+esac
+
+EOF
+batocera-services enable nas
 rm $package
+reboot
